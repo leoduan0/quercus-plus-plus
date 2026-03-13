@@ -7,7 +7,7 @@ Full-stack web application built for the AWS Hackathon using React, Node/Express
 | Layer | Local | AWS (Production) |
 |---|---|---|
 | Frontend | React 19 + Vite | AWS Amplify |
-| Backend | Node.js + Express | AWS Elastic Beanstalk |
+| Backend | Node.js + Express | AWS Lightsail |
 | Database | PostgreSQL (Docker) | AWS RDS |
 | AI | AWS Bedrock SDK | AWS Bedrock |
 
@@ -77,7 +77,7 @@ npm run dev
 
 - **Amazon Bedrock** — Foundation model API (Claude, Titan, etc.)
 - **AWS Amplify** — Frontend hosting
-- **AWS Elastic Beanstalk** — Backend hosting
+- **AWS Lightsail** — Backend hosting
 - **Amazon RDS** — Managed PostgreSQL database
 
 ## Environment Variables
