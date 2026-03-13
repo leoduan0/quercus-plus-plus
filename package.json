@@ -1,0 +1,14 @@
+{
+  "name": "hack-the-student-life-2026",
+  "version": "1.0.0",
+  "description": "Hackathon project - Canvas LMS student insights",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "fetch": "node canvas-client.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

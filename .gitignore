@@ -3,4 +3,7 @@ node_modules/
 .env.*
 .DS_Store
 *.log
+<<<<<<< HEAD
 canvas-dump.json
+=======
+>>>>>>> 4628b2e83722601e4e55a67c368e855e27d3c92a
