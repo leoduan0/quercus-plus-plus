@@ -1,184 +1,369 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* ============================================================
+   Token Entry
+   ============================================================ */
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+.token-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+.token-card {
+  max-width: 440px;
+  width: 100%;
+  text-align: left;
 }
 
-#center {
+.token-card h1 {
+  font-size: 36px;
+  margin: 0 0 8px;
+}
+
+.token-subtitle {
+  color: var(--text);
+  margin-bottom: 32px;
+}
+
+.token-form {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  gap: 10px;
 }
 
-#next-steps {
+.token-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.token-form input {
+  font-size: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: var(--mono);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.token-form input:focus {
+  border-color: var(--accent);
+}
+
+.token-form button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.token-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.token-error {
+  color: #e53e3e;
+  font-size: 14px;
+  margin: 0;
+}
+
+.token-help {
+  margin-top: 28px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.token-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.token-help ol {
+  padding-left: 20px;
+  margin: 12px 0 0;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   Loading Screen
+   ============================================================ */
+
+.loading-screen {
+  min-height: 100vh;
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
 }
 
-#docs {
+.loading-screen h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-msg {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.loading-error {
+  color: #e53e3e;
+  font-size: 14px;
+}
+
+/* ============================================================
+   App Shell Layout
+   ============================================================ */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---- Sidebar ---- */
+
+.sidebar {
+  width: 68px;
+  background: var(--code-bg);
   border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
   display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.sidebar-logo {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
 }
 
-.ticks {
-  position: relative;
+.sidebar-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-tab:hover {
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.sidebar-tab.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sidebar-clear {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-clear:hover {
+  background: rgba(229, 62, 62, 0.1);
+  color: #e53e3e;
+}
+
+.sidebar-clear .sidebar-label {
+  font-size: 9px;
+}
+
+/* ---- Main area ---- */
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.app-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-timestamp {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.header-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.header-refresh:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.header-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ---- Content area ---- */
+
+.app-content {
+  flex: 1;
+  padding: 24px 32px;
+  max-width: 960px;
   width: 100%;
+  box-sizing: border-box;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+.page-placeholder {
+  color: var(--text);
+  font-size: 14px;
+  text-align: center;
+  padding: 64px 0;
+}
+
+/* ============================================================
+   Mobile: bottom tab bar
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column-reverse;
   }
 
-  &::before {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 0;
+    position: fixed;
+    bottom: 0;
     left: 0;
-    border-left-color: var(--border);
+    z-index: 100;
+    border-right: none;
+    border-top: 1px solid var(--border);
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .sidebar-logo {
+    display: none;
+  }
+
+  .sidebar-tabs {
+    flex-direction: row;
+    flex: 1;
+    justify-content: space-around;
+    gap: 0;
+  }
+
+  .sidebar-tab {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 0;
+  }
+
+  .sidebar-clear {
+    padding: 8px 12px;
+    border-radius: 0;
+  }
+
+  .app-main {
+    padding-bottom: 72px; /* space for fixed bottom bar */
+  }
+
+  .app-content {
+    padding: 16px;
+  }
+
+  .app-header {
+    padding: 12px 16px;
   }
 }
