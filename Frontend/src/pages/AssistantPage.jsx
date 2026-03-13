@@ -11,7 +11,7 @@ const SUGGESTIONS = [
 ];
 
 export default function AssistantPage() {
-  const { data } = useData();
+  const { data, getSyllabusSummaries } = useData();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,9 +36,24 @@ export default function AssistantPage() {
 
       try {
         const isFirst = !sessionId;
+        // Inject any syllabus summaries the user has generated into canvasData
+        let enrichedData = data;
+        if (isFirst && data?.courses) {
+          const summaries = getSyllabusSummaries();
+          if (Object.keys(summaries).length > 0) {
+            enrichedData = {
+              ...data,
+              courses: data.courses.map((c) => {
+                const s = summaries[c.id];
+                if (!s) return c;
+                return { ...c, syllabusSummary: s.summary, syllabusWeights: s.weights };
+              }),
+            };
+          }
+        }
         const body = {
           message: trimmed,
-          ...(isFirst ? { canvasData: data } : {}),
+          ...(isFirst ? { canvasData: enrichedData } : {}),
           ...(sessionId ? { sessionId } : {}),
         };
 
@@ -72,7 +87,7 @@ export default function AssistantPage() {
         inputRef.current?.focus();
       }
     },
-    [input, loading, sessionId, data]
+    [input, loading, sessionId, data, getSyllabusSummaries]
   );
 
   const handleKeyDown = (e) => {

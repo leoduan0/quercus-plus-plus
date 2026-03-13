@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { fetchAllCanvasData } from "../services/canvasApi";
 
 const DataContext = createContext(null);
@@ -58,8 +58,15 @@ export function DataProvider({ token, children }) {
 
   const refresh = useCallback(() => loadData(true), [loadData]);
 
+  // Syllabus summaries cache: courseId -> { summary, weights }
+  const syllabusSummariesRef = useRef({});
+  const setSyllabusSummary = useCallback((courseId, summary, weights) => {
+    syllabusSummariesRef.current[courseId] = { summary, weights };
+  }, []);
+  const getSyllabusSummaries = useCallback(() => syllabusSummariesRef.current, []);
+
   return (
-    <DataContext.Provider value={{ data, loading, progress, error, refresh }}>
+    <DataContext.Provider value={{ data, loading, progress, error, refresh, setSyllabusSummary, getSyllabusSummaries }}>
       {children}
     </DataContext.Provider>
   );

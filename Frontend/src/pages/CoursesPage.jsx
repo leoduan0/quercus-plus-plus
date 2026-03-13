@@ -281,43 +281,91 @@ function ActionNeeded({ course }) {
 
 function SyllabusSection({ course }) {
   const [expanded, setExpanded] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [weights, setWeights] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { setSyllabusSummary, getSyllabusSummaries } = useData();
   const { syllabusBody, syllabusFiles } = course;
 
   const hasBody = syllabusBody && syllabusBody.length > 100;
   const hasFiles = syllabusFiles && syllabusFiles.length > 0;
 
+  // Restore from shared cache on mount
+  useState(() => {
+    const cached = getSyllabusSummaries()[course.id];
+    if (cached) {
+      setSummary(cached.summary);
+      setWeights(cached.weights);
+    }
+  });
+
   if (!hasBody && !hasFiles) {
     return <p className="section-empty">No syllabus available.</p>;
   }
 
+  const handleSummarize = async () => {
+    if (summary !== null) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/summarize-syllabus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          syllabusBody: syllabusBody || "",
+          syllabusFiles: syllabusFiles || [],
+          courseName: course.code || course.name,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to summarize");
+      const data = await res.json();
+      const s = data.summary || "No summary available.";
+      const w = data.weights || [];
+      setSummary(s);
+      setWeights(w);
+      setSyllabusSummary(course.id, s, w);
+    } catch (err) {
+      setError("Could not generate summary.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="syllabus-section">
-      {/* --- Weight summary placeholder (LLM-extracted) --- */}
-      <div className="syllabus-summary-placeholder">
-        {/*
-          TODO: LLM FEATURE — Syllabus weight extraction
-
-          Prompt idea: Given the syllabusBody text, extract a structured weight
-          breakdown table. Look for patterns like:
-          - "Assignments: 30%", "worth 25% of your final grade"
-          - Tabular weight data (category | weight)
-          - "Final exam: 40%"
-
-          Return as: [{ category: "Assignments", weight: 30 }, ...]
-
-          Display as a simple table: Category | Weight %
-          This data also feeds the "what do I need on the final" calculator
-          in the Grades section and the AI assistant.
-
-          For now, show a placeholder indicating the syllabus is available.
-        */}
-        <p className="syllabus-hint">
-          Syllabus available — expand to view full text.
-          {/* Replace with weight breakdown table when LLM extraction is wired. */}
-        </p>
+      {/* --- AI Summary + Weight Breakdown --- */}
+      <div className="syllabus-summary">
+        {summary === null && !loading && (
+          <button className="summarize-btn" onClick={handleSummarize}>
+            Summarize with AI
+          </button>
+        )}
+        {loading && <p className="syllabus-loading">Analyzing syllabus...</p>}
+        {error && <p className="syllabus-error">{error}</p>}
+        {summary && (
+          <div className="syllabus-ai-result">
+            <p className="syllabus-summary-text">{summary}</p>
+            {weights && weights.length > 0 && (
+              <table className="weight-table">
+                <thead>
+                  <tr><th>Category</th><th>Weight</th></tr>
+                </thead>
+                <tbody>
+                  {weights.map((w, i) => (
+                    <tr key={i}>
+                      <td>{w.category}</td>
+                      <td>{w.weight}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* --- Syllabus files (for link-only syllabi) --- */}
+      {/* --- Syllabus files --- */}
       {hasFiles && (
         <div className="syllabus-files">
           {syllabusFiles.map((f) => (

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const PORT = 3000;
@@ -64,6 +65,7 @@ app.all('/api/canvas/*path', async (req, res) => {
 
 const { chat } = require('./ai-service');
 const { trimForAI } = require('./ai-context');
+const { processSyllabusPdfs } = require('./syllabus-ocr');
 
 const sessions = new Map(); // sessionId -> { context, messages, lastActivity }
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -91,7 +93,8 @@ app.post('/api/chat', async (req, res) => {
   if (sessionId && sessions.has(sessionId)) {
     session = sessions.get(sessionId);
   } else {
-    // New session — trim canvas data for AI context
+    // New session — extract syllabus PDFs then trim canvas data for AI context
+    if (canvasData) await processSyllabusPdfs(canvasData);
     const trimmed = canvasData ? trimForAI(canvasData) : null;
     const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
     session = {
@@ -115,6 +118,65 @@ app.post('/api/chat', async (req, res) => {
     // Remove the failed user message so conversation stays consistent
     session.messages.pop();
     res.status(502).json({ error: 'AI service error: ' + err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Syllabus summarizer — extracts weight breakdown via LLM
+// ---------------------------------------------------------------------------
+
+app.post('/api/summarize-syllabus', async (req, res) => {
+  const { syllabusBody, syllabusFiles, courseName } = req.body;
+
+  if (!syllabusBody && (!syllabusFiles || syllabusFiles.length === 0)) {
+    return res.status(400).json({ error: 'No syllabus data provided' });
+  }
+
+  try {
+    // If we have PDF files, OCR them first
+    let fullText = syllabusBody || '';
+    if (syllabusFiles && syllabusFiles.length > 0) {
+      const { processSyllabusPdfs } = require('./syllabus-ocr');
+      const fakeCourse = { syllabusBody: fullText, syllabusFiles, code: courseName };
+      await processSyllabusPdfs({ courses: [fakeCourse] });
+      fullText = fakeCourse.syllabusBody || fullText;
+    }
+
+    if (!fullText || fullText.length < 50) {
+      return res.json({ summary: null, weights: [] });
+    }
+
+    // Use the AI to extract a structured summary
+    const { chat: invokeChat } = require('./ai-service');
+    const prompt = `Given this course syllabus text, extract:
+1. A concise 2-3 sentence summary of the course
+2. The grade weight breakdown as a JSON array
+
+Respond in EXACTLY this format (no other text):
+SUMMARY: <your summary>
+WEIGHTS: [{"category": "...", "weight": <number>}, ...]
+
+If no weights are found, return WEIGHTS: []
+
+Syllabus text:
+${fullText.slice(0, 6000)}`;
+
+    const reply = await invokeChat('', [{ role: 'user', content: prompt }]);
+
+    // Parse the response
+    const summaryMatch = reply.match(/SUMMARY:\s*(.+?)(?=\nWEIGHTS:)/s);
+    const weightsMatch = reply.match(/WEIGHTS:\s*(\[[\s\S]*\])/);
+
+    let summary = summaryMatch ? summaryMatch[1].trim() : reply.slice(0, 300);
+    let weights = [];
+    if (weightsMatch) {
+      try { weights = JSON.parse(weightsMatch[1]); } catch {}
+    }
+
+    res.json({ summary, weights });
+  } catch (err) {
+    console.error('Syllabus summarize error:', err.message);
+    res.status(502).json({ error: 'Failed to summarize syllabus' });
   }
 });
 

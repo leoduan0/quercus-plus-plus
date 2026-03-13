@@ -90,9 +90,17 @@ function trimForAI(fullData) {
         message: (a.message || "").slice(0, 200),
       }));
 
-    // Syllabus — cap at 2000 chars (enough for weight breakdowns)
+    // Syllabus — cap at 4000 chars (enough for weight breakdowns + OCR text)
     if (c.syllabusBody && c.syllabusBody.length > 0) {
-      course.syllabus = c.syllabusBody.slice(0, 2000);
+      course.syllabus = c.syllabusBody.slice(0, 4000);
+    }
+
+    // Pre-computed syllabus summary + weights (from the Courses page summarizer)
+    if (c.syllabusSummary) {
+      course.syllabusSummary = c.syllabusSummary;
+    }
+    if (c.syllabusWeights && c.syllabusWeights.length > 0) {
+      course.syllabusWeights = c.syllabusWeights;
     }
 
     result.courses.push(course);
