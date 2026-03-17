@@ -1,22 +1,22 @@
 "use client"
 
-import { validateCanvasTokenAction } from "@/app/actions/canvas"
-import { Button } from "./ui/button"
-import { Spinner } from "./ui/spinner"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useTransition } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { toast } from "sonner"
+import * as z from "zod"
+import { validateCanvasTokenAction } from "@/app/actions/canvas"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion"
-import { Input } from "./ui/input"
+import { Button } from "./ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Field, FieldError, FieldLabel } from "./ui/field"
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { Input } from "./ui/input"
+import { Spinner } from "./ui/spinner"
 
 const formSchema = z.object({
   token: z.string().min(1),
@@ -43,7 +43,7 @@ export function TokenEntry({ onToken }: { onToken: (token: string) => void }) {
         await validateCanvasTokenAction(token)
         onToken(token)
         toast.success("Success!", {
-          description: "Your token is valid. Redirecting you to the home page.",
+          description: "Your token is valid. Redirecting you to courses.",
         })
       } catch {
         toast.error("Invalid token")

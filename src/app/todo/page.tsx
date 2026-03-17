@@ -1,10 +1,15 @@
 "use client"
 
-import { useMemo } from "react"
-import { useData } from "@/components/data-context"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { DataProvider, useData } from "@/components/data-context"
+import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CanvasCourse } from "@/lib/types"
+
+const TOKEN_KEY = "quercusToken"
 
 const DAY = 86400000
 const NOW = Date.now()
@@ -95,7 +100,7 @@ function isActiveCourse(course: CanvasCourse, todoIds: Set<string | number>) {
   )
 }
 
-export function TodoPage() {
+function TodoBody() {
   const { data } = useData()
 
   const { groups, totalCount } = useMemo(() => {
@@ -215,5 +220,61 @@ export function TodoPage() {
         </Card>
       ))}
     </div>
+  )
+}
+
+function TodoSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
+    </div>
+  )
+}
+
+function TodoPage() {
+  const { data, loading, error } = useData()
+
+  return (
+    <>
+      <Header activeTab="todo" />
+      <main className="p-4">
+        {error ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">
+            {error}
+          </div>
+        ) : loading || !data ? (
+          <TodoSkeleton />
+        ) : (
+          <TodoBody />
+        )}
+      </main>
+    </>
+  )
+}
+
+export default function TodoRoute() {
+  const router = useRouter()
+  const [token, setToken] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (!stored) {
+      router.replace("/")
+      setReady(true)
+      return
+    }
+    setToken(stored)
+    setReady(true)
+  }, [router])
+
+  if (!ready || !token) return null
+
+  return (
+    <DataProvider token={token}>
+      <TodoPage />
+    </DataProvider>
   )
 }

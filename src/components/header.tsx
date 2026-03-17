@@ -24,11 +24,11 @@ export function Header({ activeTab }: { activeTab: TabId }) {
     : null
 
   return (
-    <header className="flex items-center justify-between border-b border-canvas-border bg-white/80 px-6 py-4 backdrop-blur md:px-10">
+    <header className="flex items-center justify-between border-b border-border bg-background/80 py-4 backdrop-blur md:px-10">
       <div>
         <h1 className="normal">{TITLES[activeTab]}</h1>
       </div>
-      <div className="flex items-center gap-3 text-sm text-canvas-muted">
+      <div className="flex items-center gap-2 text-sm">
         {fetchedAt && <span>Updated {fetchedAt}</span>}
         <Button
           variant="outline"
@@ -36,9 +36,7 @@ export function Header({ activeTab }: { activeTab: TabId }) {
           onClick={refresh}
           disabled={loading}
         >
-          <RefreshCcw
-            className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"}
-          />
+          <RefreshCcw />
           Refresh
         </Button>
       </div>

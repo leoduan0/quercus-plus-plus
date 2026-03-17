@@ -1,12 +1,17 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import type { KeyboardEvent } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { chatWithAssistantAction } from "@/app/actions/assistant"
-import { useData } from "@/components/data-context"
+import { DataProvider, useData } from "@/components/data-context"
+import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+
+const TOKEN_KEY = "quercusToken"
 
 const SUGGESTIONS = [
   "What assignments do I have due this week?",
@@ -16,7 +21,7 @@ const SUGGESTIONS = [
   "Summarize recent announcements across all my courses.",
 ]
 
-export function AssistantPage() {
+function AssistantBody() {
   const { data, getSyllabusSummaries } = useData()
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState("")
@@ -72,12 +77,12 @@ export function AssistantPage() {
           ...prev,
           { role: "assistant", content: result.reply, ts: Date.now() },
         ])
-      } catch (err: any) {
+      } catch {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: `Error: ${err.message}. Make sure your AWS credentials are set.`,
+            content: "Error. Make sure your AWS credentials are set.",
             ts: Date.now(),
             error: true,
           },
@@ -113,9 +118,9 @@ export function AssistantPage() {
               announcements, syllabi.
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s, i) => (
+              {SUGGESTIONS.map((s) => (
                 <Button
-                  key={i}
+                  key={s}
                   variant="outline"
                   size="sm"
                   onClick={() => sendMessage(s)}
@@ -128,9 +133,9 @@ export function AssistantPage() {
         )}
 
         <div className="space-y-4">
-          {messages.map((msg, i) => (
+          {messages.map((msg) => (
             <div
-              key={i}
+              key={msg}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
@@ -167,7 +172,7 @@ export function AssistantPage() {
           )}
           <Textarea
             ref={inputRef}
-            className="min-h-[48px] resize-none"
+            className="min-h-12 resize-none"
             placeholder="Ask about your courses..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -184,5 +189,55 @@ export function AssistantPage() {
         </div>
       </div>
     </Card>
+  )
+}
+
+function AssistantSkeleton() {
+  return <Skeleton className="h-[70vh] w-full rounded-2xl" />
+}
+
+function AssistantPage() {
+  const { data, loading, error } = useData()
+
+  return (
+    <>
+      <Header activeTab="assistant" />
+      <main className="p-4">
+        {error ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">
+            {error}
+          </div>
+        ) : loading || !data ? (
+          <AssistantSkeleton />
+        ) : (
+          <AssistantBody />
+        )}
+      </main>
+    </>
+  )
+}
+
+export default function AssistantRoute() {
+  const router = useRouter()
+  const [token, setToken] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (!stored) {
+      router.replace("/")
+      setReady(true)
+      return
+    }
+    setToken(stored)
+    setReady(true)
+  }, [router])
+
+  if (!ready || !token) return null
+
+  return (
+    <DataProvider token={token}>
+      <AssistantPage />
+    </DataProvider>
   )
 }

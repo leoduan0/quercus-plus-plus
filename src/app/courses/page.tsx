@@ -1,12 +1,17 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { summarizeSyllabusAction } from "@/app/actions/assistant"
-import { useData } from "@/components/data-context"
+import { DataProvider, useData } from "@/components/data-context"
+import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CanvasCourse } from "@/lib/types"
+
+const TOKEN_KEY = "quercusToken"
 
 const COURSE_COLORS = [
   "#c45a2d",
@@ -67,7 +72,7 @@ function pct(score?: number | null, possible?: number | null) {
   return Math.round((score / possible) * 100)
 }
 
-export function CoursesPage() {
+function CoursesBody() {
   const { data, setSyllabusSummary, getSyllabusSummaries } = useData()
   const [expandedCourseId, setExpandedCourseId] = useState<
     string | number | null
@@ -160,7 +165,7 @@ function UpcomingDeadlines({
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
-      <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+      <h4 className="text-sm font-semibold uppercase text-canvas-muted">
         Upcoming deadlines
       </h4>
       {upcoming.length === 0 ? (
@@ -237,7 +242,7 @@ function ActionNeeded({ course }: { course: CanvasCourse }) {
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
-      <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+      <h4 className="text-sm font-semibold uppercase text-canvas-muted">
         Action needed
       </h4>
       {items.length === 0 ? (
@@ -285,7 +290,7 @@ function GradesSection({ course }: { course: CanvasCourse }) {
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
-      <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+      <h4 className="text-sm font-semibold uppercase text-canvas-muted">
         Grades
       </h4>
       {graded.length === 0 && displayAvg == null ? (
@@ -355,7 +360,7 @@ function AnnouncementsSection({
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
-      <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+      <h4 className="text-sm font-semibold uppercase text-canvas-muted">
         Announcements
       </h4>
       {recent.length === 0 ? (
@@ -431,7 +436,7 @@ function SyllabusSection({
   if (!hasBody && !hasFiles) {
     return (
       <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
-        <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+        <h4 className="text-sm font-semibold uppercase text-canvas-muted">
           Syllabus
         </h4>
         <p className="mt-3 text-sm text-canvas-muted">No syllabus available.</p>
@@ -464,7 +469,7 @@ function SyllabusSection({
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4 md:col-span-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-canvas-muted">
+        <h4 className="text-sm font-semibold uppercase text-canvas-muted">
           Syllabus
         </h4>
         <Button
@@ -496,7 +501,10 @@ function SyllabusSection({
               </thead>
               <tbody>
                 {weights.map((w, i) => (
-                  <tr key={i} className="border-t border-canvas-border">
+                  <tr
+                    key={`${w}-${i}`}
+                    className="border-t border-canvas-border"
+                  >
                     <td className="py-1">{w.category}</td>
                     <td className="py-1">{w.weight}%</td>
                   </tr>
@@ -540,5 +548,61 @@ function SyllabusSection({
         </div>
       )}
     </div>
+  )
+}
+
+function CoursesSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-56 w-full rounded-2xl" />
+      <Skeleton className="h-56 w-full rounded-2xl" />
+      <Skeleton className="h-56 w-full rounded-2xl" />
+    </div>
+  )
+}
+
+function CoursesPage() {
+  const { data, loading, error } = useData()
+
+  return (
+    <>
+      <Header activeTab="courses" />
+      <main className="p-4">
+        {error ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">
+            {error}
+          </div>
+        ) : loading || !data ? (
+          <CoursesSkeleton />
+        ) : (
+          <CoursesBody />
+        )}
+      </main>
+    </>
+  )
+}
+
+export default function CoursesRoute() {
+  const router = useRouter()
+  const [token, setToken] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (!stored) {
+      router.replace("/")
+      setReady(true)
+      return
+    }
+    setToken(stored)
+    setReady(true)
+  }, [router])
+
+  if (!ready || !token) return null
+
+  return (
+    <DataProvider token={token}>
+      <CoursesPage />
+    </DataProvider>
   )
 }

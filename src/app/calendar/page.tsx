@@ -1,10 +1,15 @@
 "use client"
 
-import { useMemo } from "react"
-import { useData } from "@/components/data-context"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { DataProvider, useData } from "@/components/data-context"
+import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CanvasCourse } from "@/lib/types"
+
+const TOKEN_KEY = "quercusToken"
 
 const COURSE_COLORS = [
   "#c45a2d",
@@ -39,7 +44,7 @@ function formatDate(iso?: string | null) {
   })
 }
 
-export function CalendarPage() {
+function CalendarBody() {
   const { data } = useData()
 
   const items = useMemo(() => {
@@ -136,5 +141,61 @@ export function CalendarPage() {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function CalendarSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
+    </div>
+  )
+}
+
+function CalendarPage() {
+  const { data, loading, error } = useData()
+
+  return (
+    <>
+      <Header activeTab="calendar" />
+      <main className="p-4">
+        {error ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">
+            {error}
+          </div>
+        ) : loading || !data ? (
+          <CalendarSkeleton />
+        ) : (
+          <CalendarBody />
+        )}
+      </main>
+    </>
+  )
+}
+
+export default function CalendarRoute() {
+  const router = useRouter()
+  const [token, setToken] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (!stored) {
+      router.replace("/")
+      setReady(true)
+      return
+    }
+    setToken(stored)
+    setReady(true)
+  }, [router])
+
+  if (!ready || !token) return null
+
+  return (
+    <DataProvider token={token}>
+      <CalendarPage />
+    </DataProvider>
   )
 }
