@@ -1,13 +1,13 @@
-"use server";
+"use server"
 
-import { fetchAllCanvasData, validateCanvasToken } from "@/lib/canvas";
+import { fetchAllCanvasData, validateCanvasToken } from "@/lib/canvas"
 
 export async function fetchAllCanvasDataAction(token: string) {
-  if (!token) throw new Error("Missing Canvas token");
-  return fetchAllCanvasData(token);
+  if (!token) throw new Error("Missing Canvas token")
+  return fetchAllCanvasData(token)
 }
 
 export async function validateCanvasTokenAction(token: string) {
-  if (!token) throw new Error("Missing Canvas token");
-  return validateCanvasToken(token);
+  if (!token) throw new Error("Missing Canvas token")
+  return validateCanvasToken(token)
 }

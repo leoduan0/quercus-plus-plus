@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-display: "Satoshi", "sans-serif";
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -169,7 +173,22 @@ main {
   body {
     @apply bg-background text-foreground;
   }
-  html {
-    @apply font-sans;
+}
+
+@layer components {
+  a.normal {
+    @apply text-blue-500 dark:text-blue-400 hover:underline;
+  }
+
+  h1.normal {
+    @apply text-2xl font-bold;
+  }
+
+  h2.normal {
+    @apply text-xl font-bold;
+  }
+
+  h3.normal {
+    @apply text-lg font-bold;
   }
 }

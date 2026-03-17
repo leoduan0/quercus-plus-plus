@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import { useData } from "@/components/app/data-context";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CanvasCourse } from "@/lib/types";
+import { useMemo } from "react"
+import { useData } from "@/components/data-context"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { CanvasCourse } from "@/lib/types"
 
 const COURSE_COLORS = [
   "#c45a2d",
@@ -15,48 +15,48 @@ const COURSE_COLORS = [
   "#2b6cb0",
   "#805ad5",
   "#c05621",
-];
+]
 
 function shortCode(course: CanvasCourse) {
-  const src = course.code || course.name;
-  const m = src.match(/[A-Z]{3}\d{3}/);
+  const src = course.code || course.name
+  const m = src.match(/[A-Z]{3}\d{3}/)
   return m
     ? m[0]
     : src
         .split(/[:\-–]/)[0]
         .trim()
-        .slice(0, 12);
+        .slice(0, 12)
 }
 
 function formatDate(iso?: string | null) {
-  if (!iso) return "";
+  if (!iso) return ""
   return new Date(iso).toLocaleString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  });
+  })
 }
 
 export function CalendarPage() {
-  const { data } = useData();
+  const { data } = useData()
 
   const items = useMemo(() => {
-    if (!data) return [] as any[];
-    const colorMap: Record<string, string> = {};
+    if (!data) return []
+    const colorMap: Record<string, string> = {}
     data.courses.forEach((c, i) => {
-      colorMap[String(c.id)] = COURSE_COLORS[i % COURSE_COLORS.length];
-    });
+      colorMap[String(c.id)] = COURSE_COLORS[i % COURSE_COLORS.length]
+    })
 
-    const events: any[] = [];
+    const events: any[] = []
 
     for (const course of data.courses) {
-      const color = colorMap[String(course.id)];
-      const code = shortCode(course);
+      const color = colorMap[String(course.id)]
+      const code = shortCode(course)
 
       for (const a of course.assignments) {
-        if (!a.dueAt) continue;
+        if (!a.dueAt) continue
         events.push({
           id: `asgn-${a.id}`,
           title: a.name,
@@ -65,14 +65,14 @@ export function CalendarPage() {
           type: "deadline",
           color,
           detail: a.pointsPossible ? `${a.pointsPossible} pts` : "",
-        });
+        })
       }
     }
 
     for (const ev of data.upcoming || []) {
-      if (ev.type !== "event") continue;
-      const courseId = ev.context_code?.replace("course_", "");
-      const color = colorMap[String(courseId)] || "#6b7280";
+      if (ev.type !== "event") continue
+      const courseId = ev.context_code?.replace("course_", "")
+      const color = colorMap[String(courseId)] || "#6b7280"
       events.push({
         id: `event-${ev.id}`,
         title: ev.title,
@@ -81,15 +81,15 @@ export function CalendarPage() {
         type: "event",
         color,
         detail: ev.location_name || "",
-      });
+      })
     }
 
     return events
       .filter((e) => e.time)
-      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-  }, [data]);
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+  }, [data])
 
-  if (!data) return null;
+  if (!data) return null
 
   return (
     <Card>
@@ -136,5 +136,5 @@ export function CalendarPage() {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

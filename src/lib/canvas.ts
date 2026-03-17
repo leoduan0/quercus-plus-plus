@@ -1,78 +1,78 @@
-import type { CanvasCourse, CanvasData } from "@/lib/types";
+import type { CanvasCourse, CanvasData } from "@/lib/types"
 
 const CANVAS_BASE =
-  process.env.CANVAS_BASE_URL || "https://q.utoronto.ca/api/v1";
+  process.env.CANVAS_BASE_URL || "https://q.utoronto.ca/api/v1"
 
 async function canvasFetch(endpoint: string, token: string) {
   const res = await fetch(`${CANVAS_BASE}${endpoint}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
-  });
+  })
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Canvas API ${res.status}: ${endpoint} ${text}`.trim());
+    const text = await res.text().catch(() => "")
+    throw new Error(`Canvas API ${res.status}: ${endpoint} ${text}`.trim())
   }
 
-  return res.json();
+  return res.json()
 }
 
 async function canvasFetchAll(endpoint: string, token: string) {
-  let url: string | null = `${CANVAS_BASE}${endpoint}`;
-  const all: unknown[] = [];
+  let url: string | null = `${CANVAS_BASE}${endpoint}`
+  const all: unknown[] = []
 
   while (url) {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
-    });
+    })
 
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Canvas API ${res.status}: ${url} ${text}`.trim());
+      const text = await res.text().catch(() => "")
+      throw new Error(`Canvas API ${res.status}: ${url} ${text}`.trim())
     }
 
-    const data = await res.json();
-    if (!Array.isArray(data)) return data;
-    all.push(...data);
+    const data = await res.json()
+    if (!Array.isArray(data)) return data
+    all.push(...data)
 
-    const link = res.headers.get("link");
-    url = null;
+    const link = res.headers.get("link")
+    url = null
     if (link) {
-      const m = link.match(/<([^>]+)>;\s*rel="next"/);
-      if (m) url = m[1];
+      const m = link.match(/<([^>]+)>;\s*rel="next"/)
+      if (m) url = m[1]
     }
   }
 
-  return all;
+  return all
 }
 
 async function canvasFetchAllSafe(endpoint: string, token: string) {
   try {
-    return await canvasFetchAll(endpoint, token);
+    return await canvasFetchAll(endpoint, token)
   } catch {
-    return [];
+    return []
   }
 }
 
 function stripHtml(html: string | null | undefined) {
-  if (!html) return null;
+  if (!html) return null
   return html
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
 }
 
 async function fetchCourses(token: string) {
-  return canvasFetchAll("/courses?enrollment_state=active&per_page=100", token);
+  return canvasFetchAll("/courses?enrollment_state=active&per_page=100", token)
 }
 
 async function fetchAssignments(courseId: number | string, token: string) {
   const raw = await canvasFetchAll(
     `/courses/${courseId}/assignments?per_page=100&order_by=due_at&include[]=submission`,
     token,
-  );
-  return (raw as any[]).map((a) => ({
+  )
+  return raw.map((a) => ({
     id: a.id,
     name: a.name,
     dueAt: a.due_at,
@@ -83,32 +83,32 @@ async function fetchAssignments(courseId: number | string, token: string) {
     grade: a.submission?.grade ?? null,
     submittedAt: a.submission?.submitted_at ?? null,
     workflowState: a.submission?.workflow_state ?? null,
-  }));
+  }))
 }
 
 async function fetchGrades(courseId: number | string, token: string) {
-  const raw = (await canvasFetchAll(
+  const raw = await canvasFetchAll(
     `/courses/${courseId}/enrollments?type[]=StudentEnrollment&user_id=self`,
     token,
-  )) as any[];
+  )
 
   if (raw.length > 0 && raw[0].grades) {
-    const g = raw[0].grades;
+    const g = raw[0].grades
     return {
       currentScore: g.current_score,
       currentGrade: g.current_grade,
       finalScore: g.final_score,
       finalGrade: g.final_grade,
-    };
+    }
   }
-  return {};
+  return {}
 }
 
 async function fetchSubmissions(courseId: number | string, token: string) {
-  const raw = (await canvasFetchAll(
+  const raw = await canvasFetchAll(
     `/courses/${courseId}/students/submissions?student_ids[]=self&per_page=100&include[]=assignment&include[]=submission_comments`,
     token,
-  )) as any[];
+  )
 
   return raw.map((s) => ({
     assignmentId: s.assignment_id,
@@ -125,22 +125,22 @@ async function fetchSubmissions(courseId: number | string, token: string) {
       comment: c.comment,
       createdAt: c.created_at,
     })),
-  }));
+  }))
 }
 
 async function fetchUpcoming(token: string) {
-  return canvasFetchAll("/users/self/upcoming_events?per_page=50", token);
+  return canvasFetchAll("/users/self/upcoming_events?per_page=50", token)
 }
 
 async function fetchTodo(token: string) {
-  return canvasFetchAll("/users/self/todo?per_page=50", token);
+  return canvasFetchAll("/users/self/todo?per_page=50", token)
 }
 
 async function fetchModules(courseId: number | string, token: string) {
-  const raw = (await canvasFetchAllSafe(
+  const raw = await canvasFetchAllSafe(
     `/courses/${courseId}/modules?include[]=items&per_page=100`,
     token,
-  )) as any[];
+  )
 
   return raw.map((m) => ({
     id: m.id,
@@ -154,21 +154,21 @@ async function fetchModules(courseId: number | string, token: string) {
       type: i.type,
       url: i.html_url,
     })),
-  }));
+  }))
 }
 
 async function fetchAnnouncements(courseId: number | string, token: string) {
-  const raw = (await canvasFetchAllSafe(
+  const raw = await canvasFetchAllSafe(
     `/courses/${courseId}/discussion_topics?only_announcements=true&per_page=50`,
     token,
-  )) as any[];
+  )
 
   return raw.map((a) => ({
     id: a.id,
     title: a.title,
     postedAt: a.posted_at,
     message: stripHtml(a.message)?.slice(0, 500) ?? null,
-  }));
+  }))
 }
 
 async function fetchSyllabus(courseId: number | string, token: string) {
@@ -176,19 +176,19 @@ async function fetchSyllabus(courseId: number | string, token: string) {
     const raw = await canvasFetch(
       `/courses/${courseId}?include[]=syllabus_body`,
       token,
-    );
-    if (!raw.syllabus_body) return null;
-    return stripHtml(raw.syllabus_body);
+    )
+    if (!raw.syllabus_body) return null
+    return stripHtml(raw.syllabus_body)
   } catch {
-    return null;
+    return null
   }
 }
 
 async function fetchFiles(courseId: number | string, token: string) {
-  const raw = (await canvasFetchAllSafe(
+  const raw = await canvasFetchAllSafe(
     `/courses/${courseId}/files?per_page=100`,
     token,
-  )) as any[];
+  )
 
   return raw.map((f) => ({
     id: f.id,
@@ -198,17 +198,17 @@ async function fetchFiles(courseId: number | string, token: string) {
     url: f.url,
     createdAt: f.created_at,
     updatedAt: f.updated_at,
-  }));
+  }))
 }
 
 export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
-  const rawCourses = (await fetchCourses(token)) as any[];
+  const rawCourses = await fetchCourses(token)
   const [upcoming, todo] = await Promise.all([
     fetchUpcoming(token).catch(() => []),
     fetchTodo(token).catch(() => []),
-  ]);
+  ])
 
-  const courses: CanvasCourse[] = [];
+  const courses: CanvasCourse[] = []
 
   const coursePromises = rawCourses.map(async (course) => {
     const [
@@ -227,11 +227,11 @@ export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
       fetchFiles(course.id, token).catch(() => []),
       fetchModules(course.id, token).catch(() => []),
       fetchAnnouncements(course.id, token).catch(() => []),
-    ]);
+    ])
 
-    const syllabusFiles = (files as any[]).filter((f) =>
+    const syllabusFiles = files.filter((f) =>
       (f.name || "").toLowerCase().includes("syllabus"),
-    );
+    )
 
     return {
       id: course.id,
@@ -253,20 +253,20 @@ export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
       modules,
       announcements,
       files,
-    } satisfies CanvasCourse;
-  });
+    } satisfies CanvasCourse
+  })
 
-  const settled = await Promise.all(coursePromises);
-  courses.push(...settled);
+  const settled = await Promise.all(coursePromises)
+  courses.push(...settled)
 
   return {
     fetchedAt: new Date().toISOString(),
     courses,
-    upcoming: upcoming as any[],
-    todo: todo as any[],
-  };
+    upcoming: upcoming,
+    todo: todo,
+  }
 }
 
 export async function validateCanvasToken(token: string) {
-  return canvasFetch("/users/self/profile", token);
+  return canvasFetch("/users/self/profile", token)
 }

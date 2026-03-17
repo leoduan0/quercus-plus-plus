@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
-import { summarizeSyllabusAction } from "@/app/actions/assistant";
-import { useData } from "@/components/app/data-context";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CanvasCourse } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react"
+import { summarizeSyllabusAction } from "@/app/actions/assistant"
+import { useData } from "@/components/data-context"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { CanvasCourse } from "@/lib/types"
 
 const COURSE_COLORS = [
   "#c45a2d",
@@ -17,88 +17,88 @@ const COURSE_COLORS = [
   "#2b6cb0",
   "#805ad5",
   "#c05621",
-];
+]
 
-const NOW = Date.now();
-const DAY = 86400000;
+const NOW = Date.now()
+const DAY = 86400000
 
 function colorFor(index: number) {
-  return COURSE_COLORS[index % COURSE_COLORS.length];
+  return COURSE_COLORS[index % COURSE_COLORS.length]
 }
 
 function shortCode(course: CanvasCourse) {
-  const src = course.code || course.name;
-  const m = src.match(/[A-Z]{3}\d{3}/);
+  const src = course.code || course.name
+  const m = src.match(/[A-Z]{3}\d{3}/)
   return m
     ? m[0]
     : src
         .split(/[:\-–]/)[0]
         .trim()
-        .slice(0, 16);
+        .slice(0, 16)
 }
 
 function courseTitle(course: CanvasCourse) {
-  const parts = course.name.split(":");
-  return parts.length > 1 ? parts.slice(1).join(":").trim() : course.name;
+  const parts = course.name.split(":")
+  return parts.length > 1 ? parts.slice(1).join(":").trim() : course.name
 }
 
 function relativeDate(iso?: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const diff = d.getTime() - NOW;
-  if (diff < -DAY) return `${Math.round(-diff / DAY)}d ago`;
-  if (diff < DAY) return "Today";
-  if (diff < 2 * DAY) return "Tomorrow";
-  if (diff < 7 * DAY) return `In ${Math.round(diff / DAY)}d`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (!iso) return ""
+  const d = new Date(iso)
+  const diff = d.getTime() - NOW
+  if (diff < -DAY) return `${Math.round(-diff / DAY)}d ago`
+  if (diff < DAY) return "Today"
+  if (diff < 2 * DAY) return "Tomorrow"
+  if (diff < 7 * DAY) return `In ${Math.round(diff / DAY)}d`
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
 function urgencyClass(iso?: string | null) {
-  if (!iso) return "bg-transparent";
-  const diff = new Date(iso).getTime() - NOW;
-  if (diff < 0) return "bg-red-50 text-red-700";
-  if (diff < DAY) return "bg-amber-50 text-amber-700";
-  if (diff < 3 * DAY) return "bg-orange-50 text-orange-700";
-  return "bg-transparent";
+  if (!iso) return "bg-transparent"
+  const diff = new Date(iso).getTime() - NOW
+  if (diff < 0) return "bg-red-50 text-red-700"
+  if (diff < DAY) return "bg-amber-50 text-amber-700"
+  if (diff < 3 * DAY) return "bg-orange-50 text-orange-700"
+  return "bg-transparent"
 }
 
 function pct(score?: number | null, possible?: number | null) {
-  if (score == null || !possible) return null;
-  return Math.round((score / possible) * 100);
+  if (score == null || !possible) return null
+  return Math.round((score / possible) * 100)
 }
 
 export function CoursesPage() {
-  const { data, setSyllabusSummary, getSyllabusSummaries } = useData();
+  const { data, setSyllabusSummary, getSyllabusSummaries } = useData()
   const [expandedCourseId, setExpandedCourseId] = useState<
     string | number | null
-  >(null);
+  >(null)
 
   const activeCourses = useMemo(() => {
-    if (!data) return [];
-    const todoIds = new Set((data.todo || []).map((t) => t.course_id));
-    const sixtyDaysAgo = NOW - 60 * DAY;
-    const thirtyDaysAgo = NOW - 30 * DAY;
+    if (!data) return []
+    const todoIds = new Set((data.todo || []).map((t) => t.course_id))
+    const sixtyDaysAgo = NOW - 60 * DAY
+    const thirtyDaysAgo = NOW - 30 * DAY
 
     return data.courses.filter((course) => {
       const hasRecentAssignment = course.assignments.some(
         (a) => a.dueAt && new Date(a.dueAt).getTime() > sixtyDaysAgo,
-      );
+      )
       const hasRecentAnnouncement = course.announcements.some(
         (a) => a.postedAt && new Date(a.postedAt).getTime() > thirtyDaysAgo,
-      );
+      )
       return (
         hasRecentAssignment || hasRecentAnnouncement || todoIds.has(course.id)
-      );
-    });
-  }, [data]);
+      )
+    })
+  }, [data])
 
-  if (!data) return null;
+  if (!data) return null
 
   return (
     <div className="flex flex-col gap-6">
       {activeCourses.map((course, index) => {
-        const color = colorFor(index);
-        const isExpanded = expandedCourseId === course.id;
+        const color = colorFor(index)
+        const isExpanded = expandedCourseId === course.id
         return (
           <Card key={course.id} className="animate-fadeUp">
             <CardHeader className="flex flex-row items-start justify-between">
@@ -142,21 +142,21 @@ export function CoursesPage() {
               )}
             </CardContent>
           </Card>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function UpcomingDeadlines({
   assignments,
 }: {
-  assignments: CanvasCourse["assignments"];
+  assignments: CanvasCourse["assignments"]
 }) {
   const upcoming = assignments
     .filter((a) => a.dueAt && new Date(a.dueAt).getTime() > NOW)
     .sort((a, b) => new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime())
-    .slice(0, 6);
+    .slice(0, 6)
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
@@ -186,12 +186,11 @@ function UpcomingDeadlines({
         </ul>
       )}
     </div>
-  );
+  )
 }
 
 function ActionNeeded({ course }: { course: CanvasCourse }) {
-  const items: { id: string; text: string; detail: string; type: string }[] =
-    [];
+  const items: { id: string; text: string; detail: string; type: string }[] = []
 
   for (const a of course.assignments) {
     if (
@@ -205,7 +204,7 @@ function ActionNeeded({ course }: { course: CanvasCourse }) {
         text: a.name,
         detail: `Due ${relativeDate(a.dueAt)}`,
         type: "To Do",
-      });
+      })
     }
   }
 
@@ -216,11 +215,11 @@ function ActionNeeded({ course }: { course: CanvasCourse }) {
         text: s.assignmentName || "Missing assignment",
         detail: "Missing",
         type: "Missing",
-      });
+      })
     }
   }
 
-  const weekAgo = NOW - 7 * DAY;
+  const weekAgo = NOW - 7 * DAY
   for (const s of course.submissions) {
     if (
       s.comments.length > 0 &&
@@ -232,7 +231,7 @@ function ActionNeeded({ course }: { course: CanvasCourse }) {
         text: s.assignmentName || "Feedback",
         detail: `Feedback from ${s.comments[s.comments.length - 1].author}`,
         type: "Feedback",
-      });
+      })
     }
   }
 
@@ -262,27 +261,27 @@ function ActionNeeded({ course }: { course: CanvasCourse }) {
         </ul>
       )}
     </div>
-  );
+  )
 }
 
 function GradesSection({ course }: { course: CanvasCourse }) {
-  const { grades, submissions } = course;
-  const apiScore = grades?.currentScore;
-  const graded = submissions.filter((s) => s.score != null && s.pointsPossible);
+  const { grades, submissions } = course
+  const apiScore = grades?.currentScore
+  const graded = submissions.filter((s) => s.score != null && s.pointsPossible)
   graded.sort(
     (a, b) =>
       new Date(a.gradedAt || 0).getTime() - new Date(b.gradedAt || 0).getTime(),
-  );
+  )
 
-  const totalScore = graded.reduce((sum, s) => sum + (s.score || 0), 0);
+  const totalScore = graded.reduce((sum, s) => sum + (s.score || 0), 0)
   const totalPossible = graded.reduce(
     (sum, s) => sum + (s.pointsPossible || 0),
     0,
-  );
+  )
   const computedAvg =
-    totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : null;
+    totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : null
 
-  const displayAvg = apiScore ?? computedAvg;
+  const displayAvg = apiScore ?? computedAvg
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
@@ -337,13 +336,13 @@ function GradesSection({ course }: { course: CanvasCourse }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function AnnouncementsSection({
   announcements,
 }: {
-  announcements: CanvasCourse["announcements"];
+  announcements: CanvasCourse["announcements"]
 }) {
   const recent = announcements
     .slice()
@@ -352,7 +351,7 @@ function AnnouncementsSection({
         new Date(b.postedAt || 0).getTime() -
         new Date(a.postedAt || 0).getTime(),
     )
-    .slice(0, 5);
+    .slice(0, 5)
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4">
@@ -392,7 +391,7 @@ function AnnouncementsSection({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function SyllabusSection({
@@ -400,34 +399,34 @@ function SyllabusSection({
   setSyllabusSummary,
   getSyllabusSummaries,
 }: {
-  course: CanvasCourse;
+  course: CanvasCourse
   setSyllabusSummary: (
     courseId: number | string,
     summary: string,
     weights: any[],
-  ) => void;
+  ) => void
   getSyllabusSummaries: () => Record<
     string,
     { summary: string; weights: any[] }
-  >;
+  >
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [weights, setWeights] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [weights, setWeights] = useState<any[] | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const { syllabusBody, syllabusFiles } = course;
-  const hasBody = syllabusBody && syllabusBody.length > 100;
-  const hasFiles = syllabusFiles && syllabusFiles.length > 0;
+  const { syllabusBody, syllabusFiles } = course
+  const hasBody = syllabusBody && syllabusBody.length > 100
+  const hasFiles = syllabusFiles && syllabusFiles.length > 0
 
   useEffect(() => {
-    const cached = getSyllabusSummaries()[String(course.id)];
+    const cached = getSyllabusSummaries()[String(course.id)]
     if (cached) {
-      setSummary(cached.summary);
-      setWeights(cached.weights);
+      setSummary(cached.summary)
+      setWeights(cached.weights)
     }
-  }, [course.id, getSyllabusSummaries]);
+  }, [course.id, getSyllabusSummaries])
 
   if (!hasBody && !hasFiles) {
     return (
@@ -437,30 +436,30 @@ function SyllabusSection({
         </h4>
         <p className="mt-3 text-sm text-canvas-muted">No syllabus available.</p>
       </div>
-    );
+    )
   }
 
   const handleSummarize = async () => {
-    if (summary !== null || loading) return;
-    setLoading(true);
-    setError(null);
+    if (summary !== null || loading) return
+    setLoading(true)
+    setError(null)
     try {
       const data = await summarizeSyllabusAction({
         syllabusBody: syllabusBody || "",
         syllabusFiles: syllabusFiles || [],
         courseName: course.code || course.name,
-      });
-      const s = data.summary || "No summary available.";
-      const w = data.weights || [];
-      setSummary(s);
-      setWeights(w);
-      setSyllabusSummary(course.id, s, w);
+      })
+      const s = data.summary || "No summary available."
+      const w = data.weights || []
+      setSummary(s)
+      setWeights(w)
+      setSyllabusSummary(course.id, s, w)
     } catch {
-      setError("Could not generate summary.");
+      setError("Could not generate summary.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="rounded-2xl border border-canvas-border bg-white/70 p-4 md:col-span-2">
@@ -541,5 +540,5 @@ function SyllabusSection({
         </div>
       )}
     </div>
-  );
+  )
 }
