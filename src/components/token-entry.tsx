@@ -94,7 +94,7 @@ export function TokenEntry({ onToken }: { onToken: (token: string) => void }) {
             </Button>
           </form>
 
-          <Accordion type="single" defaultValue="token" className="max-w-lg">
+          <Accordion defaultValue={["token"]} className="max-w-lg">
             <AccordionItem value="token">
               <AccordionTrigger>
                 How do I get my Canvas API token?

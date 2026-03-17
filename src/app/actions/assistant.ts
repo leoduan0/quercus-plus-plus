@@ -1,6 +1,7 @@
 "use server"
 
 import { type ChatMessage, chatWithBedrock } from "@/lib/ai"
+import { processSyllabusPdfs } from "@/lib/syllabus-ocr"
 import type { CanvasData } from "@/lib/types"
 
 type Session = {
@@ -35,10 +36,11 @@ export async function chatWithAssistantAction(params: {
   const { message, sessionId } = params
 
   if (!message) throw new Error("Missing message")
+  if (!sessionId) throw new Error("Missing session ID")
 
-  let session: Session
+  const session = sessions.get(sessionId)
 
-  session = sessions.get(sessionId)!
+  if (!session) throw new Error("No session")
 
   session.messages.push({ role: "user", content: message })
   session.lastActivity = Date.now()
@@ -95,7 +97,7 @@ ${fullText.slice(0, 6000)}`
 
     const reply = await chatWithBedrock("", [{ role: "user", content: prompt }])
 
-    const summaryMatch = reply.match(/SUMMARY:\s*(.+?)(?=\nWEIGHTS:)/s)
+    const summaryMatch = reply.match(/SUMMARY:\s*([\s\S]+?)(?=\nWEIGHTS:)/)
     const weightsMatch = reply.match(/WEIGHTS:\s*(\[[\s\S]*\])/)
 
     const summary = summaryMatch ? summaryMatch[1].trim() : reply.slice(0, 300)

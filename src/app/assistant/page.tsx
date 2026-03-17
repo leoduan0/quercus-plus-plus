@@ -32,7 +32,7 @@ function AssistantBody() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  })
 
   const sendMessage = useCallback(
     async (text?: string) => {
@@ -67,7 +67,7 @@ function AssistantBody() {
 
         const result = await chatWithAssistantAction({
           message: trimmed,
-          ...(isFirst ? { canvasData: enrichedData } : {}),
+          ...(isFirst && enrichedData ? { canvasData: enrichedData } : {}),
           ...(sessionId ? { sessionId } : {}),
         })
 

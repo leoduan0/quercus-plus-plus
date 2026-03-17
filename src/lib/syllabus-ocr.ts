@@ -47,6 +47,7 @@ export async function processSyllabusPdfs(canvasData: CanvasData) {
     if (pdfFiles.length === 0) return
 
     for (const file of pdfFiles) {
+      if (!file.url) continue
       try {
         const text = await extractTextFromPdfUrl(file.url)
         if (text && text.length > 0) {

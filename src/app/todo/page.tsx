@@ -106,7 +106,11 @@ function TodoBody() {
   const { groups, totalCount } = useMemo(() => {
     if (!data) return { groups: [], totalCount: 0 }
 
-    const todoIds = new Set((data.todo || []).map((t) => t.course_id))
+    const todoIds = new Set(
+      (data.todo || [])
+        .map((t) => t.course_id)
+        .filter((id): id is string | number => id !== undefined),
+    )
     const colorMap: Record<string, string> = {}
     data.courses.forEach((c, i) => {
       colorMap[String(c.id)] = COURSE_COLORS[i % COURSE_COLORS.length]

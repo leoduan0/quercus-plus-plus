@@ -4,7 +4,7 @@ const CANVAS_BASE =
   process.env.CANVAS_BASE_URL || "https://q.utoronto.ca/api/v1"
 
 async function canvasFetch(endpoint: string, token: string) {
-  const res = await fetch(`${CANVAS_BASE}${endpoint}`, {
+  const res: Response = await fetch(`${CANVAS_BASE}${endpoint}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   })
@@ -22,7 +22,7 @@ async function canvasFetchAll(endpoint: string, token: string) {
   const all: unknown[] = []
 
   while (url) {
-    const res = await fetch(url, {
+    const res: Response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })
@@ -72,7 +72,7 @@ async function fetchAssignments(courseId: number | string, token: string) {
     `/courses/${courseId}/assignments?per_page=100&order_by=due_at&include[]=submission`,
     token,
   )
-  return raw.map((a) => ({
+  return raw.map((a: any) => ({
     id: a.id,
     name: a.name,
     dueAt: a.due_at,
@@ -110,7 +110,7 @@ async function fetchSubmissions(courseId: number | string, token: string) {
     token,
   )
 
-  return raw.map((s) => ({
+  return raw.map((s: any) => ({
     assignmentId: s.assignment_id,
     assignmentName: s.assignment?.name ?? null,
     score: s.score,
@@ -142,7 +142,7 @@ async function fetchModules(courseId: number | string, token: string) {
     token,
   )
 
-  return raw.map((m) => ({
+  return raw.map((m: any) => ({
     id: m.id,
     name: m.name,
     position: m.position,
@@ -163,7 +163,7 @@ async function fetchAnnouncements(courseId: number | string, token: string) {
     token,
   )
 
-  return raw.map((a) => ({
+  return raw.map((a: any) => ({
     id: a.id,
     title: a.title,
     postedAt: a.posted_at,
@@ -190,7 +190,7 @@ async function fetchFiles(courseId: number | string, token: string) {
     token,
   )
 
-  return raw.map((f) => ({
+  return raw.map((f: any) => ({
     id: f.id,
     name: f.display_name || f.filename,
     size: f.size,
@@ -210,7 +210,7 @@ export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
 
   const courses: CanvasCourse[] = []
 
-  const coursePromises = rawCourses.map(async (course) => {
+  const coursePromises = rawCourses.map(async (course: any) => {
     const [
       grades,
       assignments,
@@ -229,7 +229,7 @@ export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
       fetchAnnouncements(course.id, token).catch(() => []),
     ])
 
-    const syllabusFiles = files.filter((f) =>
+    const syllabusFiles = files.filter((f: any) =>
       (f.name || "").toLowerCase().includes("syllabus"),
     )
 
@@ -244,7 +244,7 @@ export async function fetchAllCanvasData(token: string): Promise<CanvasData> {
       assignments,
       submissions,
       syllabusBody,
-      syllabusFiles: syllabusFiles.map((f) => ({
+      syllabusFiles: syllabusFiles.map((f: any) => ({
         id: f.id,
         name: f.name,
         url: f.url,
