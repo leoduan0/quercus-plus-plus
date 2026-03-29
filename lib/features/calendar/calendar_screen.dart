@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../../data/models/canvas_models.dart';
 import '../dashboard/controllers/canvas_data_controller.dart';
@@ -35,80 +36,177 @@ class CalendarScreen extends ConsumerWidget {
   }
 }
 
-class _CalendarTimeline extends StatelessWidget {
+class _CalendarTimeline extends StatefulWidget {
   const _CalendarTimeline({required this.items});
 
   final List<_CalendarItem> items;
 
   @override
+  State<_CalendarTimeline> createState() => _CalendarTimelineState();
+}
+
+class _CalendarTimelineState extends State<_CalendarTimeline> {
+  late DateTime _focusedDay;
+  DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _focusedDay = now;
+    _selectedDay = now;
+  }
+
+  DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  List<_CalendarItem> _itemsForDay(DateTime day) {
+    final normalized = _normalizeDate(day);
+    return widget.items
+        .where((item) => _normalizeDate(item.time) == normalized)
+        .toList()
+      ..sort((a, b) => a.time.compareTo(b.time));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return const _CalendarEmptyState(
         message: 'No upcoming events or deadlines on record.',
       );
     }
 
-    return ListView.separated(
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
-            color: Colors.white,
+    final selectedDay = _selectedDay ?? DateTime.now();
+    final selectedItems = _itemsForDay(selectedDay);
+
+    final calendar = Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: TableCalendar<_CalendarItem>(
+          firstDay: DateTime.now().subtract(const Duration(days: 365)),
+          lastDay: DateTime.now().add(const Duration(days: 365 * 3)),
+          focusedDay: _focusedDay,
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          eventLoader: _itemsForDay,
+          startingDayOfWeek: StartingDayOfWeek.sunday,
+          headerStyle: const HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: true,
           ),
-          child: Row(
+          calendarStyle: CalendarStyle(
+            outsideDaysVisible: false,
+            selectedDecoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            todayDecoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              shape: BoxShape.circle,
+            ),
+            markerDecoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            markersMaxCount: 3,
+            markerSize: 5,
+            markersAnchor: 1.15,
+          ),
+          onDaySelected: (selectedDay, focusedDay) {
+            setState(() {
+              _selectedDay = selectedDay;
+              _focusedDay = focusedDay;
+            });
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+          },
+        ),
+      ),
+    );
+
+    final details = _DayDetailsPanel(day: selectedDay, items: selectedItems);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 920;
+        if (isWide) {
+          return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 14,
-                height: 14,
-                margin: const EdgeInsets.only(top: 6, right: 16),
-                decoration: BoxDecoration(
-                  color: item.color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat('EEEE, MMM d • h:mm a').format(item.time),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
-                    ),
-                    if (item.detail != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          item.detail!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: Colors.black54),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Chip(
-                label: Text(item.tag),
-                backgroundColor: item.color.withOpacity(0.12),
-              ),
+              Expanded(flex: 3, child: calendar),
+              const SizedBox(width: 12),
+              Expanded(flex: 2, child: details),
             ],
-          ),
+          );
+        }
+
+        return Column(
+          children: [
+            calendar,
+            const SizedBox(height: 12),
+            Expanded(child: details),
+          ],
         );
       },
+    );
+  }
+}
+
+class _DayDetailsPanel extends StatelessWidget {
+  const _DayDetailsPanel({required this.day, required this.items});
+
+  final DateTime day;
+  final List<_CalendarItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              DateFormat('EEEE, MMM d').format(day),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: items.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nothing due on this day.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          leading: CircleAvatar(
+                            backgroundColor: item.color,
+                            radius: 7,
+                          ),
+                          title: Text(item.title),
+                          subtitle: Text(
+                            DateFormat('h:mm a').format(item.time),
+                          ),
+                          trailing: Chip(label: Text(item.tag)),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -118,16 +216,20 @@ class _CalendarSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 4,
-      itemBuilder: (_, __) => Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        height: 110,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+    return Column(
+      children: [
+        const Card(child: SizedBox(height: 380)),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            itemCount: 3,
+            itemBuilder: (_, _) => const Card(
+              margin: EdgeInsets.only(bottom: 12),
+              child: SizedBox(height: 72),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -139,15 +241,13 @@ class _CalendarEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mutedColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.event_available_outlined,
-            size: 56,
-            color: Colors.black.withOpacity(0.4),
-          ),
+          Icon(Icons.event_available_outlined, size: 56, color: mutedColor),
           const SizedBox(height: 12),
           Text(message, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),
@@ -155,7 +255,7 @@ class _CalendarEmptyState extends StatelessWidget {
             'Calendar pulls both Canvas events and assignment due dates.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+            ).textTheme.bodyMedium?.copyWith(color: mutedColor),
             textAlign: TextAlign.center,
           ),
         ],
@@ -220,7 +320,7 @@ List<_CalendarItem> _buildItems(CanvasData data) {
     final courseIndex = data.courses.indexWhere((c) => c.id == courseId);
     final color = courseIndex >= 0
         ? palette[courseIndex % palette.length]
-        : Colors.black54;
+        : const Color(0xFF607D8B);
     final tag = event.contextName ?? event.type ?? 'Event';
     items.add(
       _CalendarItem(

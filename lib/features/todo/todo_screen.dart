@@ -45,23 +45,15 @@ class _TodoBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groups = _groupAssignments(courses);
-    if (groups.isEmpty) {
-      return const _TodoEmptyState(
-        message: 'All caught up — no assignments on the radar.',
-      );
-    }
 
     return ListView.separated(
       itemCount: groups.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 18),
+      separatorBuilder: (_, _) => const SizedBox(height: 18),
       itemBuilder: (context, index) {
         final group = groups[index];
         return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -70,76 +62,50 @@ class _TodoBody extends StatelessWidget {
                   children: [
                     Text(
                       group.label,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Chip(label: Text('${group.items.length}')),
                   ],
                 ),
-                const SizedBox(height: 16),
-                for (final item in group.items)
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                const SizedBox(height: 8),
+                if (group.items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      group.emptyMessage,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: item.statusColor.withOpacity(0.25),
-                      ),
-                      color: item.statusColor.withOpacity(0.08),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                  )
+                else
+                  for (final item in group.items)
+                    Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      color: item.statusColor.withValues(alpha: 0.08),
+                      child: ListTile(
+                        leading: Chip(
+                          backgroundColor: item.courseColor.withValues(
+                            alpha: 0.15,
                           ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            color: item.courseColor.withOpacity(0.15),
-                          ),
-                          child: Text(
+                          label: Text(
                             item.courseCode,
                             style: TextStyle(
                               color: item.courseColor,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${item.relativeDue} • ${DateFormat('EEE, MMM d • h:mm a').format(item.dueAt)}',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: Colors.black54),
-                              ),
-                            ],
-                          ),
+                        title: Text(item.title),
+                        subtitle: Text(
+                          DateFormat('EEE, MMM d • h:mm a').format(item.dueAt),
                         ),
-                        Chip(
-                          label: Text(item.submitted ? 'Submitted' : 'Pending'),
-                          backgroundColor: item.submitted
-                              ? Colors.green.withOpacity(0.15)
-                              : Colors.amber.withOpacity(0.15),
+                        trailing: Icon(
+                          Icons.circle,
+                          size: 12,
+                          color: item.statusColor,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
               ],
             ),
           ),
@@ -156,13 +122,9 @@ class _TodoSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: 3,
-      itemBuilder: (_, __) => Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        height: 160,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
+      itemBuilder: (_, _) => const Card(
+        margin: EdgeInsets.only(bottom: 12),
+        child: SizedBox(height: 120),
       ),
     );
   }
@@ -175,28 +137,21 @@ class _TodoEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mutedColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 56,
-            color: Colors.black.withOpacity(0.4),
-          ),
+          Icon(Icons.inbox_outlined, size: 56, color: mutedColor),
           const SizedBox(height: 12),
-          Text(
-            message,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
+          Text(message, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),
           Text(
             'Your planner will populate when Canvas assignments include due dates.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+            ).textTheme.bodyMedium?.copyWith(color: mutedColor),
             textAlign: TextAlign.center,
           ),
         ],
@@ -206,10 +161,15 @@ class _TodoEmptyState extends StatelessWidget {
 }
 
 class _TodoGroup {
-  _TodoGroup({required this.label, required this.items});
+  _TodoGroup({
+    required this.label,
+    required this.items,
+    required this.emptyMessage,
+  });
 
   final String label;
   final List<_TodoItem> items;
+  final String emptyMessage;
 }
 
 class _TodoItem {
@@ -217,24 +177,24 @@ class _TodoItem {
     required this.title,
     required this.courseCode,
     required this.courseColor,
-    required this.relativeDue,
     required this.dueAt,
-    required this.submitted,
     required this.statusColor,
   });
 
   final String title;
   final String courseCode;
   final Color courseColor;
-  final String relativeDue;
   final DateTime dueAt;
-  final bool submitted;
   final Color statusColor;
 }
 
 List<_TodoGroup> _groupAssignments(List<CanvasCourse> courses) {
+  final overdue = <_TodoItem>[];
+  final dueToday = <_TodoItem>[];
+  final nextSevenDays = <_TodoItem>[];
   final now = DateTime.now();
-  final items = <_TodoItem>[];
+  final today = DateTime(now.year, now.month, now.day);
+  final sevenDaysFromToday = today.add(const Duration(days: 7));
 
   for (var i = 0; i < courses.length; i++) {
     final course = courses[i];
@@ -245,37 +205,56 @@ List<_TodoGroup> _groupAssignments(List<CanvasCourse> courses) {
       final due = assignment.dueAt;
       if (due == null) continue;
       if (assignment.workflowState == 'graded') continue;
+      if (assignment.submittedAt != null) continue;
 
-      items.add(
-        _TodoItem(
-          title: assignment.name,
-          courseCode: courseCode,
-          courseColor: courseColor,
-          relativeDue: _relativeLabel(due),
-          dueAt: due,
-          submitted: assignment.submittedAt != null,
-          statusColor: _statusColor(due),
-        ),
+      final dueDate = DateTime(due.year, due.month, due.day);
+      final isOverdue = due.isBefore(now);
+      final isToday = dueDate == today;
+      final inNextSevenDays =
+          dueDate.isAfter(today) && !dueDate.isAfter(sevenDaysFromToday);
+
+      if (!isOverdue && !isToday && !inNextSevenDays) {
+        continue;
+      }
+
+      final item = _TodoItem(
+        title: assignment.name,
+        courseCode: courseCode,
+        courseColor: courseColor,
+        dueAt: due,
+        statusColor: _statusColor(due),
       );
+
+      if (isOverdue) {
+        overdue.add(item);
+      } else if (isToday) {
+        dueToday.add(item);
+      } else {
+        nextSevenDays.add(item);
+      }
     }
   }
 
-  final grouped = <String, List<_TodoItem>>{};
-  for (final item in items) {
-    grouped.putIfAbsent(item.relativeDue, () => []).add(item);
-  }
-
-  final order = {'Overdue': 0, 'Due today': 1, 'This week': 2, 'Later': 3};
-
-  final sortedKeys = grouped.keys.toList()
-    ..sort((a, b) => (order[a] ?? 99).compareTo(order[b] ?? 99));
+  overdue.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+  dueToday.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+  nextSevenDays.sort((a, b) => a.dueAt.compareTo(b.dueAt));
 
   return [
-    for (final key in sortedKeys)
-      _TodoGroup(
-        label: key,
-        items: grouped[key]!..sort((a, b) => a.dueAt.compareTo(b.dueAt)),
-      ),
+    _TodoGroup(
+      label: 'Overdue',
+      items: overdue,
+      emptyMessage: 'No overdue tasks. Nice.',
+    ),
+    _TodoGroup(
+      label: 'Due today',
+      items: dueToday,
+      emptyMessage: 'Nothing due today.',
+    ),
+    _TodoGroup(
+      label: 'Next 7 days',
+      items: nextSevenDays,
+      emptyMessage: 'No tasks due in the next 7 days.',
+    ),
   ];
 }
 
@@ -289,24 +268,15 @@ String _shortCode(CanvasCourse course) {
   if (match != null) {
     return match.group(0)!.toUpperCase();
   }
-  final head = source.split(RegExp('[:\\-–]')).first.trim();
+  final head = source.split(RegExp('[:-]')).first.trim();
   final safe = head.isEmpty ? source : head;
   final end = math.min(8, safe.length);
   return safe.substring(0, end).toUpperCase();
 }
 
-String _relativeLabel(DateTime due) {
-  final now = DateTime.now();
-  final diff = due.difference(now);
-  if (diff.isNegative) return 'Overdue';
-  if (diff.inDays == 0) return 'Due today';
-  if (diff.inDays <= 7) return 'This week';
-  return 'Later';
-}
-
 Color _statusColor(DateTime due) {
   final diff = due.difference(DateTime.now());
-  if (diff.isNegative) return Colors.redAccent;
+  if (diff.isNegative) return Colors.red;
   if (diff.inHours <= 24) return Colors.orangeAccent;
   if (diff.inDays <= 3) return Colors.amber;
   return Colors.blueGrey;

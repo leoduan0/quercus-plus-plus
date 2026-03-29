@@ -1,53 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static ThemeData get light {
-    final base = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF5E45FF),
-        brightness: Brightness.light,
-        background: const Color(0xFFF1F4F9),
-      ),
-      textTheme: GoogleFonts.spaceGroteskTextTheme(),
+    final scheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF5E45FF),
+      brightness: Brightness.light,
+      surface: const Color(0xFFF7F8FC),
     );
 
-    return base.copyWith(
-      scaffoldBackgroundColor: const Color(0xFFF1F4F9),
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white.withOpacity(0.85),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        foregroundColor: Colors.black87,
-      ),
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
       cardTheme: CardThemeData(
-        color: Colors.white.withOpacity(0.9),
-        shadowColor: Colors.black12,
+        color: Colors.white,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFF5E45FF), width: 1.4),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      dividerTheme: DividerThemeData(color: Colors.black.withOpacity(0.05)),
-      chipTheme: base.chipTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        backgroundColor: const Color(0xFFECE9FF),
-        selectedColor: const Color(0xFF5E45FF),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: scheme.surfaceContainer,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: scheme.secondaryContainer,
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: scheme.secondaryContainer,
+      ),
+      dividerTheme: DividerThemeData(color: scheme.outlineVariant),
+      expansionTileTheme: ExpansionTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        collapsedIconColor: scheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  static ThemeData get dark {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF5E45FF),
+      brightness: Brightness.dark,
+      surface: const Color(0xFF11141D),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
+      cardTheme: CardThemeData(
+        color: scheme.surfaceContainer,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainer,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: scheme.surfaceContainerHighest,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        indicatorColor: scheme.secondaryContainer,
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        indicatorColor: scheme.secondaryContainer,
+      ),
+      dividerTheme: DividerThemeData(color: scheme.outlineVariant),
+      expansionTileTheme: ExpansionTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        collapsedIconColor: scheme.onSurfaceVariant,
       ),
     );
   }

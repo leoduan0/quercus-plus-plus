@@ -170,9 +170,7 @@ class CanvasRepository {
     if (rawGrades.isNotEmpty) {
       final gradePayload = rawGrades.first['grades'];
       if (gradePayload is Map) {
-        grades = CanvasGrade.fromJson(
-          Map<String, dynamic>.from(gradePayload as Map),
-        );
+        grades = CanvasGrade.fromJson(Map<String, dynamic>.from(gradePayload));
       }
     }
 

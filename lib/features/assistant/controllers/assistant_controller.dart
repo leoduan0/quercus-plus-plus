@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/assistant_models.dart';
-import '../../../data/models/canvas_models.dart';
 import '../../../data/providers.dart';
 import '../../dashboard/controllers/canvas_data_controller.dart';
 import '../../dashboard/controllers/syllabus_summary_controller.dart';

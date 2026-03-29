@@ -26,12 +26,12 @@ class CoursesScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: Material(
-              color: Colors.red.withOpacity(0.08),
+              color: Colors.red.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               child: ListTile(
                 title: Text(
                   syllabusState.errorMessage!,
-                  style: const TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.close),
@@ -70,7 +70,7 @@ class _CoursesBody extends StatelessWidget {
 
     return ListView.separated(
       itemCount: courses.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 18),
+      separatorBuilder: (_, _) => const SizedBox(height: 18),
       itemBuilder: (context, index) => _CourseCard(
         course: courses[index],
         paletteColor: _courseColors[index % _courseColors.length],
@@ -128,7 +128,11 @@ class _CourseCardState extends ConsumerState<_CourseCard> {
                           child: Text(
                             '${widget.course.assignments.length} assignments tracked',
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: Colors.black54),
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ),
                     ],
@@ -209,7 +213,7 @@ class _UpcomingList extends StatelessWidget {
     return _SectionCard(
       title: 'Upcoming deadlines',
       child: upcoming.isEmpty
-          ? const Text('No upcoming work — enjoy the breathing room!')
+          ? const Text('No pending work!')
           : Column(
               children: [
                 for (final assignment in upcoming)
@@ -471,25 +475,17 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFF),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(letterSpacing: 0.2),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -510,48 +506,13 @@ class _ListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: highlightColor?.withOpacity(0.15) ?? Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (highlightColor ?? Colors.black.withOpacity(0.04)).withOpacity(
-            0.3,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.black54),
-                  ),
-              ],
-            ),
-          ),
-          if (trailing != null)
-            Text(
-              trailing!,
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-        ],
+      color: highlightColor?.withValues(alpha: 0.15),
+      child: ListTile(
+        title: Text(title),
+        subtitle: subtitle == null ? null : Text(subtitle!),
+        trailing: trailing == null ? null : Text(trailing!),
       ),
     );
   }
@@ -565,21 +526,14 @@ class _CourseBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Center(
-        child: Text(
-          label.length > 8 ? label.substring(0, 8) : label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
-          ),
+    return Chip(
+      backgroundColor: color.withValues(alpha: 0.18),
+      label: Text(
+        label.length > 8 ? label.substring(0, 8) : label,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -593,13 +547,9 @@ class _CoursesSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: 3,
-      itemBuilder: (_, __) => Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        height: 220,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-        ),
+      itemBuilder: (_, _) => const Card(
+        margin: EdgeInsets.only(bottom: 12),
+        child: SizedBox(height: 180),
       ),
     );
   }
@@ -610,15 +560,13 @@ class _EmptyCoursesState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mutedColor = Theme.of(context).textTheme.bodySmall?.color;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.celebration_outlined,
-            size: 56,
-            color: Colors.black.withOpacity(0.4),
-          ),
+          Icon(Icons.celebration_outlined, size: 56, color: mutedColor),
           const SizedBox(height: 12),
           Text(
             'We could not find any active courses yet.',
@@ -629,7 +577,7 @@ class _EmptyCoursesState extends StatelessWidget {
             'Once Canvas returns data we will light this area up.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+            ).textTheme.bodyMedium?.copyWith(color: mutedColor),
           ),
         ],
       ),
@@ -659,7 +607,7 @@ String _relativeDate(DateTime? date) {
 Color _urgencyColor(DateTime? date) {
   if (date == null) return Colors.transparent;
   final diff = date.difference(DateTime.now());
-  if (diff.isNegative) return Colors.redAccent;
+  if (diff.isNegative) return Colors.red;
   if (diff.inHours <= 24) return Colors.orangeAccent;
   if (diff.inDays <= 3) return Colors.amber;
   return Colors.blueGrey;

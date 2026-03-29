@@ -13,70 +13,37 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentLocation = state.matchedLocation ?? state.uri.toString();
+    final currentLocation = state.matchedLocation;
     final activeTab = AppTabX.fromLocation(currentLocation);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 1024;
-        final surface = Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFF7F8FB), Color(0xFFF0F1F8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (isWide)
-                  _Sidebar(
+        if (isWide) {
+          return Scaffold(
+            body: SafeArea(
+              child: Row(
+                children: [
+                  _WideNav(
                     activeTab: activeTab,
                     onSelect: (tab) => _navigate(context, currentLocation, tab),
                     onLogout: () => _handleLogout(context, ref),
                   ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isWide ? 32 : 16,
-                      vertical: 24,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(isWide ? 32 : 24),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(isWide ? 32 : 24),
-                          color: Colors.white,
-                          boxShadow: const [
-                            BoxShadow(
-                              blurRadius: 30,
-                              offset: Offset(0, 20),
-                              color: Color(0x14000000),
-                            ),
-                          ],
-                        ),
-                        child: child,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                  const VerticalDivider(width: 1),
+                  Expanded(child: child),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
 
         return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: surface,
-          bottomNavigationBar: isWide
-              ? null
-              : _BottomNav(
-                  activeTab: activeTab,
-                  onSelect: (tab) => _navigate(context, currentLocation, tab),
-                  onLogout: () => _handleLogout(context, ref),
-                ),
+          body: SafeArea(child: child),
+          bottomNavigationBar: _BottomNav(
+            activeTab: activeTab,
+            onSelect: (tab) => _navigate(context, currentLocation, tab),
+            onLogout: () => _handleLogout(context, ref),
+          ),
         );
       },
     );
@@ -147,8 +114,8 @@ extension AppTabX on AppTab {
   }
 }
 
-class _Sidebar extends StatelessWidget {
-  const _Sidebar({
+class _WideNav extends StatelessWidget {
+  const _WideNav({
     required this.activeTab,
     required this.onSelect,
     required this.onLogout,
@@ -160,105 +127,23 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 104,
-      margin: const EdgeInsets.only(left: 24, top: 24, bottom: 24),
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 30,
-            offset: Offset(0, 20),
-            color: Color(0x14000000),
+    return NavigationRail(
+      selectedIndex: AppTab.values.indexOf(activeTab),
+      labelType: NavigationRailLabelType.all,
+      destinations: [
+        for (final tab in AppTab.values)
+          NavigationRailDestination(
+            icon: Icon(tab.icon),
+            label: Text(tab.label),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.black.withOpacity(0.08)),
-            ),
-            child: const Text(
-              'Q++',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: Column(
-              children: [
-                for (final tab in AppTab.values)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: _SidebarButton(
-                      tab: tab,
-                      active: tab == activeTab,
-                      onTap: () => onSelect(tab),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Disconnect',
-            onPressed: onLogout,
-            icon: const Icon(Icons.logout_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SidebarButton extends StatelessWidget {
-  const _SidebarButton({
-    required this.tab,
-    required this.active,
-    required this.onTap,
-  });
-
-  final AppTab tab;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          color: active ? const Color(0xFFEEF0FF) : Colors.transparent,
-          border: Border.all(
-            color: active ? const Color(0xFF8288FF) : Colors.transparent,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              tab.icon,
-              color: active ? const Color(0xFF4A4DE6) : Colors.black54,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              tab.label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: active ? const Color(0xFF4A4DE6) : Colors.black54,
-              ),
-            ),
-          ],
+      ],
+      onDestinationSelected: (index) => onSelect(AppTab.values[index]),
+      trailing: Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: IconButton(
+          tooltip: 'Disconnect',
+          onPressed: onLogout,
+          icon: const Icon(Icons.logout_rounded),
         ),
       ),
     );

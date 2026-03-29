@@ -49,9 +49,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
             child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-              ),
               child: Column(
                 children: [
                   Expanded(
@@ -64,38 +61,25 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                               itemCount: state.messages.length,
                               itemBuilder: (context, index) {
                                 final message = state.messages[index];
-                                final align = message.role == AssistantRole.user
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft;
-                                final bubbleColor =
-                                    message.role == AssistantRole.user
-                                    ? const Color(0xFF4A4DE6)
-                                    : Colors.grey.shade100;
-                                final textColor =
-                                    message.role == AssistantRole.user
-                                    ? Colors.white
-                                    : Colors.black87;
-                                return Align(
-                                  alignment: align,
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      vertical: 6,
+                                final isUser =
+                                    message.role == AssistantRole.user;
+                                return Card(
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                  ),
+                                  color: isUser
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer
+                                      : null,
+                                  child: ListTile(
+                                    title: Text(
+                                      isUser ? 'You' : 'Assistant',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelLarge,
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 12,
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 540,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: bubbleColor,
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    child: Text(
-                                      message.content,
-                                      style: TextStyle(color: textColor),
-                                    ),
+                                    subtitle: Text(message.content),
                                   ),
                                 );
                               },
@@ -107,7 +91,9 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
                         state.error!,
-                        style: const TextStyle(color: Colors.redAccent),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
                   const Divider(height: 1),
@@ -182,9 +168,7 @@ class _Suggestions extends StatelessWidget {
       children: [
         Text(
           'Ask about anything tied to your Canvas data. The assistant knows assignments, submissions, announcements, and syllabus weights.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: Colors.black87),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 18),
         Wrap(

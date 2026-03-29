@@ -89,10 +89,10 @@ class _TokenEntryScreenState extends ConsumerState<TokenEntryScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Connect your Quercus account to unlock class dashboards, TODO triage, a contextual calendar, and our AI assistant.',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(color: Colors.black87),
+                        'Connect your Quercus account to access class dashboards, to-do list, calendar, and our assistant.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
@@ -100,15 +100,11 @@ class _TokenEntryScreenState extends ConsumerState<TokenEntryScreen> {
                         enabled: !_submitting,
                         decoration: const InputDecoration(
                           labelText: 'Canvas API token',
-                          hintText: 'Paste the token you generated in Quercus',
                         ),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Token is required';
-                          }
-                          if (value.trim().length < 10) {
-                            return 'That token looks too short';
                           }
                           return null;
                         },
@@ -117,7 +113,9 @@ class _TokenEntryScreenState extends ConsumerState<TokenEntryScreen> {
                         const SizedBox(height: 12),
                         Text(
                           _error!,
-                          style: const TextStyle(color: Colors.redAccent),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 24),
@@ -179,7 +177,7 @@ class _TokenHelpAccordionState extends State<_TokenHelpAccordion> {
         ExpansionPanel(
           canTapOnHeader: true,
           isExpanded: _expanded[0],
-          headerBuilder: (_, __) => ListTile(
+          headerBuilder: (_, _) => ListTile(
             onTap: () => _toggle(0),
             title: const Text('How do I generate a Canvas token?'),
           ),
@@ -188,45 +186,34 @@ class _TokenHelpAccordionState extends State<_TokenHelpAccordion> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StepText('1. Visit Quercus → Account → Settings'),
-                _StepText(
-                  '2. Scroll to Approved Integrations and click “+ New Access Token”',
+                Text('1. Quercus \u2192 Account \u2192 Settings.'),
+                Text(
+                  '2. Scroll to "Approved Integrations" and click "+ New Access Token".',
                 ),
-                _StepText('3. Name it “Quercus++” and generate the token'),
-                _StepText('4. Paste the token above and submit'),
+                Text(
+                  '3. Set the purpose to "Quercus++" and set a generous expiration date and time. Then, click on "Generate Token".',
+                ),
+                Text(
+                  '4. Paste the token above and click on "Connect to Quercus".',
+                ),
               ],
             ),
           ),
         ),
         ExpansionPanel(
-          canTapOnHeader: true,
           isExpanded: _expanded[1],
-          headerBuilder: (_, __) => ListTile(
+          headerBuilder: (_, _) => ListTile(
             onTap: () => _toggle(1),
             title: const Text('Where is my data stored?'),
           ),
           body: const Padding(
             padding: EdgeInsets.only(bottom: 12, left: 16, right: 16),
             child: Text(
-              'Everything stays on-device. We cache your token and Canvas payload locally so you can refresh instantly without reinserting credentials.',
+              'Your token is stored on-device. Nothing is uploaded to any servers.',
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StepText extends StatelessWidget {
-  const _StepText(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 }
