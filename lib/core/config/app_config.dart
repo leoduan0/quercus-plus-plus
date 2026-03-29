@@ -6,28 +6,18 @@ class AppConfig {
       ? dotenv.get('CANVAS_BASE_URL').trim()
       : 'https://q.utoronto.ca/api/v1';
 
-  static String? get awsAccessKeyId =>
-      dotenv.maybeGet('AWS_ACCESS_KEY_ID')?.trim().isNotEmpty == true
-      ? dotenv.get('AWS_ACCESS_KEY_ID').trim()
+  static String? get openAiApiKey =>
+      dotenv.maybeGet('OPENAI_API_KEY')?.trim().isNotEmpty == true
+      ? dotenv.get('OPENAI_API_KEY').trim()
       : null;
 
-  static String? get awsSecretAccessKey =>
-      dotenv.maybeGet('AWS_SECRET_ACCESS_KEY')?.trim().isNotEmpty == true
-      ? dotenv.get('AWS_SECRET_ACCESS_KEY').trim()
-      : null;
+  static String get openAiModel =>
+      dotenv.maybeGet('OPENAI_MODEL')?.trim().isNotEmpty == true
+      ? dotenv.get('OPENAI_MODEL').trim()
+      : 'gpt-4.1-mini';
 
-  static String? get awsSessionToken =>
-      dotenv.maybeGet('AWS_SESSION_TOKEN')?.trim().isNotEmpty == true
-      ? dotenv.get('AWS_SESSION_TOKEN').trim()
-      : null;
-
-  static String get awsRegion =>
-      dotenv.maybeGet('AWS_REGION')?.trim().isNotEmpty == true
-      ? dotenv.get('AWS_REGION').trim()
-      : 'us-west-2';
-
-  static String get bedrockModelId =>
-      dotenv.maybeGet('BEDROCK_MODEL_ID')?.trim().isNotEmpty == true
-      ? dotenv.get('BEDROCK_MODEL_ID').trim()
-      : 'us.amazon.nova-pro-v1:0';
+  static String get openAiBaseUrl =>
+      dotenv.maybeGet('OPENAI_BASE_URL')?.trim().isNotEmpty == true
+      ? dotenv.get('OPENAI_BASE_URL').trim()
+      : 'https://api.openai.com/v1';
 }

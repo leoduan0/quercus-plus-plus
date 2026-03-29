@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import '../models/assistant_models.dart';
 import '../models/canvas_models.dart';
-import '../services/bedrock_client.dart';
+import '../services/openai_client.dart';
 
 class AssistantRepository {
   AssistantRepository(this._client);
 
-  final BedrockClient _client;
+  final OpenAiClient _client;
 
   Future<String> sendMessage({
     required List<AssistantMessage> history,
@@ -26,14 +26,13 @@ class AssistantRepository {
         ? _structuredContext(canvasData, syllabusOverrides)
         : _knowledgeContext();
 
-    final payload = _buildPayload(
+    final response = await _client.createChatCompletion(
       systemPrompt: _systemPrompt(context),
       messages: history,
-      maxTokens: 1200,
+      maxCompletionTokens: 1200,
       temperature: 0.15,
       topP: 0.9,
     );
-    final response = await _client.invokeModel(payload);
     return _extractText(response);
   }
 
@@ -56,16 +55,14 @@ class AssistantRepository {
         'Syllabus text (truncated to 6000 chars):\n'
         '${syllabusText.substring(0, truncatedLength)}';
 
-    final payload = _buildPayload(
+    final response = await _client.createChatCompletion(
       systemPrompt:
           'You turn raw syllabi into terse summaries and weight tables.',
       messages: [AssistantMessage(role: AssistantRole.user, content: prompt)],
-      maxTokens: 800,
+      maxCompletionTokens: 800,
       temperature: 0.1,
       topP: 0.9,
     );
-
-    final response = await _client.invokeModel(payload);
     final text = _extractText(response);
 
     final summaryMatch = RegExp(
@@ -94,15 +91,13 @@ class AssistantRepository {
   }
 
   Future<_QueryRoute> _routeQuery(String message) async {
-    final payload = _buildPayload(
+    final response = await _client.createChatCompletion(
       systemPrompt: _routerPrompt,
       messages: [AssistantMessage(role: AssistantRole.user, content: message)],
-      maxTokens: 64,
+      maxCompletionTokens: 64,
       temperature: 0,
       topP: 0.1,
     );
-
-    final response = await _client.invokeModel(payload);
     final text = _extractText(response);
     final match = RegExp(r'\{[^}]+\}').firstMatch(text);
     try {
@@ -117,87 +112,21 @@ class AssistantRepository {
     }
   }
 
-  Map<String, dynamic> _buildPayload({
-    required String systemPrompt,
-    required List<AssistantMessage> messages,
-    required int maxTokens,
-    required double temperature,
-    required double topP,
-  }) {
-    if (_client.isNovaModel) {
-      return {
-        'system': [
-          {'text': systemPrompt},
-        ],
-        'messages': messages
-            .map(
-              (msg) => {
-                'role': msg.role == AssistantRole.user ? 'user' : 'assistant',
-                'content': [
-                  {'text': msg.content},
-                ],
-              },
-            )
-            .toList(),
-        'inferenceConfig': {
-          'maxTokens': maxTokens,
-          'temperature': temperature,
-          'topP': topP,
-        },
-      };
-    }
-
-    if (_client.isClaudeModel) {
-      return {
-        'anthropic_version': 'bedrock-2023-05-31',
-        'system': systemPrompt,
-        'max_tokens': maxTokens,
-        'temperature': temperature,
-        'top_p': topP,
-        'top_k': 250,
-        'stop_sequences': ['\n\nHuman'],
-        'messages': messages
-            .map(
-              (msg) => {
-                'role': msg.role == AssistantRole.user ? 'user' : 'assistant',
-                'content': [
-                  {'type': 'text', 'text': msg.content},
-                ],
-              },
-            )
-            .toList(),
-      };
-    }
-
-    throw StateError('Unsupported Bedrock model ${_client.modelId}');
-  }
-
   String _extractText(Map<String, dynamic> body) {
-    if (_client.isNovaModel) {
-      final output = body['output'] as Map<String, dynamic>?;
-      final message = output?['message'] as Map<String, dynamic>?;
-      final content = message?['content'] as List<dynamic>?;
-      if (content != null && content.isNotEmpty) {
-        final chunk = content.first;
-        if (chunk is Map && chunk['text'] is String) {
-          return chunk['text'] as String;
-        }
-      }
-    } else if (_client.isClaudeModel) {
-      final content = body['content'] as List<dynamic>?;
-      if (content != null && content.isNotEmpty) {
-        final chunk = content.first;
-        if (chunk is Map && chunk['text'] is String) {
-          return chunk['text'] as String;
-        }
-        final nested = chunk['content'];
-        if (nested is List && nested.isNotEmpty) {
-          final text = nested.first['text'];
-          if (text is String) return text;
+    final choices = body['choices'];
+    if (choices is List && choices.isNotEmpty) {
+      final first = choices.first;
+      if (first is Map) {
+        final message = first['message'];
+        if (message is Map) {
+          final content = message['content'];
+          if (content is String && content.trim().isNotEmpty) {
+            return content;
+          }
         }
       }
     }
-    throw StateError('Unexpected Bedrock response: $body');
+    throw StateError('Unexpected OpenAI response: $body');
   }
 
   String _structuredContext(

@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/config/app_config.dart';
 import 'repositories/assistant_repository.dart';
 import 'repositories/canvas_repository.dart';
-import 'services/bedrock_client.dart';
 import 'services/canvas_api_client.dart';
+import 'services/openai_client.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -30,9 +30,9 @@ final canvasRepositoryProvider = Provider<CanvasRepository>((ref) {
   return CanvasRepository(client);
 });
 
-final bedrockClientProvider = Provider<BedrockClient>((_) => BedrockClient());
+final openAiClientProvider = Provider<OpenAiClient>((_) => OpenAiClient());
 
 final assistantRepositoryProvider = Provider<AssistantRepository>((ref) {
-  final client = ref.watch(bedrockClientProvider);
+  final client = ref.watch(openAiClientProvider);
   return AssistantRepository(client);
 });
